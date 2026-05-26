@@ -255,7 +255,7 @@ sap-transport-gate/
 |---|---|
 | `abap-code-review` | 单个 ABAP 程序发布前代码审查（安全、质量，9 个维度，无 TR 级别门禁评估） |
 | `sap-integration-wiki` | SAP 集成模式、API 参考、最佳实践 |
-| `sap-apilog-query` | 查询 SAP 接口调用日志 |
+| `sap-adt-cli` | SAP ADT REST API 命令行工具 |
 
 ---
 

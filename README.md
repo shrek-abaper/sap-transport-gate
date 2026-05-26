@@ -258,7 +258,7 @@ Each confirmation item specifies: who confirms, what they confirm, based on what
 |---|---|
 | `abap-code-review` | Single ABAP program pre-release code review (security, quality, 9 dimensions) without TR-level gate assessment |
 | `sap-integration-wiki` | SAP integration patterns, API reference, best practices |
-| `sap-apilog-query` | Query SAP interface call logs |
+| `sap-adt-cli` | CLI tool for SAP ADT REST API access |
 
 ---
 
