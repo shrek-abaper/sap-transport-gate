@@ -1,6 +1,6 @@
 # Report Format
 
-> `sap-transport-gate` v1.0.0 — §1: Markdown report template; §2: JSON summary schema; §3: File naming
+> `sap-transport-gate` v1.2.0 — §1: Markdown report template; §2: JSON summary schema; §3: File naming
 
 ---
 
@@ -17,7 +17,7 @@ Report language: **English** throughout.
 
 **Project**: sap-transport-gate  
 **Generated**: {YYYY-MM-DD HH:MM UTC}  
-**Reviewer**: AI Transport Gate (sap-transport-gate v1.0.0)
+**Reviewer**: AI Transport Gate (sap-transport-gate v1.2.0)
 
 ---
 
@@ -210,11 +210,22 @@ Report language: **English** throughout.
 
 ## 6. Required Actions Before Release
 
-> Only applicable for CONDITIONAL_GO. For NO_GO, list blocking issues. For NEED_MORE_EVIDENCE, list what must be provided.
+> **SKILL BOUNDARY — human-only items only.**
+>
+> Required Actions must list ONLY tasks that require **human intervention**. The SKILL handles the following automatically and they must NOT appear here:
+> - Object list retrieval (fetched via `tr_collector.py collect` in Online Transport Mode)
+> - Source code fetching (fetched via `tr_collector.py` for all supported object types)
+> - Syntax rule checks applied by the SKILL during dimensional review
+>
+> What belongs here: code fixes by the developer, manual test execution, UAT sign-off, FI/business consultant confirmation, security owner approval, Transport prerequisite deployment, and other tasks only a human can perform.
+>
+> For `CONDITIONAL_GO`: list fix/confirmation actions required before release.
+> For `NO_GO`: list blocking issues that must be remediated.
+> For `NEED_MORE_EVIDENCE`: list only evidence that **cannot be auto-fetched** (e.g., manual test results, functional spec, business confirmation).
 
 | # | Action | Responsible | Evidence of Completion | Risk if Not Completed |
 |---|---|---|---|---|
-| 1 | {specific action} | {Developer / Tech Lead / Security / Business Owner} | {what proof is expected} | {risk statement} |
+| 1 | {specific human action} | {Developer / Tech Lead / Security / Business Owner} | {what proof is expected} | {risk statement} |
 | 2 | ... | ... | ... | ... |
 
 {If no actions required: "None. Decision is GO — no actions required before release."}
@@ -306,7 +317,7 @@ The JSON summary is generated alongside the Markdown report for CI pipeline inte
 ```json
 {
   "project": "sap-transport-gate",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "transportRequestId": "{TR_ID or null}",
   "reviewMode": "OfflinePackage | OfflineLocal | OnlineTransport",
   "targetStage": "DEV | QAS | PRD",
@@ -410,21 +421,23 @@ Same naming convention with `.json` extension:
 
 ### Save Location
 
-Apply the following rule in order:
+**Always save to a TR-specific subdirectory.** Never save directly to `reports/`.
 
-1. **Review Package directory present** (Online Transport Mode or Offline Package Mode with a collected package): if a `manifest.json` was produced by `tr_collector.py` — i.e., a directory such as `reports/{TR_ID}_package/` exists — save both the Markdown report and the JSON summary **inside that package directory**. This makes the package self-contained: manifest, sources, and review reports all live together under one directory.
+| Mode | Save path |
+|---|---|
+| **Online Transport Mode** | `tr_collector.py collect --output-dir reports/{TR_ID}_package/` creates the directory. Save reports inside it alongside `manifest.json` and `sources/`. |
+| **Offline Package Mode** | Save to the user-provided package path. If no path was specified, create `reports/{TR_ID}_package/` and save there. |
+| **Offline Local Mode** | Create `reports/{TR_ID}_package/` even if no manifest exists. Save all reports and any user-provided evidence files there. |
 
-   Example resulting layout:
-   ```
-   reports/DEVK900123_package/
-   ├── manifest.json
-   ├── sources/
-   │   └── CLAS_ZCL_MY_CLASS.abap
-   ├── TR_REVIEW_DEVK900123_20260526.md     ← save here
-   └── TR_REVIEW_DEVK900123_20260526.json   ← save here
-   ```
-
-2. **No package directory** (Offline Local Mode or no `tr_collector.py` package): save to `reports/` under the current working directory (workspace root).
+Example resulting layout (all modes):
+```
+reports/DEVK900123_package/
+├── manifest.json              ← present if tr_collector.py was run
+├── sources/
+│   └── CLAS_ZCL_MY_CLASS.abap
+├── TR_REVIEW_DEVK900123_20260526.md     ← always saved here
+└── TR_REVIEW_DEVK900123_20260526.json   ← always saved here
+```
 
 Create the target directory automatically if it does not exist. Never ask the user to create it manually.
 

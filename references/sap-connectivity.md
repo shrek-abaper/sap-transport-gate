@@ -1,6 +1,6 @@
 # SAP ADT Connectivity Reference
 
-> `sap-transport-gate` v1.0.0 — Online Transport Mode: credential setup, authentication, TR extraction
+> `sap-transport-gate` v1.1.0 — Online Transport Mode: credential setup, authentication, TR extraction
 
 This file enables the **Online Transport Mode** of the SKILL. The `tr_collector.py` script (in `scripts/`) implements everything described here.
 

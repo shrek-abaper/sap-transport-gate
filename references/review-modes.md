@@ -1,6 +1,6 @@
 # Review Modes and Review Package Specification
 
-> `sap-transport-gate` v1.0.0 — §1: Mode detection; §2: Evidence checklists; §3: Review Package structure
+> `sap-transport-gate` v1.2.0 — §1: Mode detection; §2: Evidence checklists; §3: Review Package structure
 
 ---
 
@@ -84,12 +84,15 @@ The user provides a TR ID and has access to live system data via internal tools,
 
 **Mode flow:**
 1. Identify the TR ID from user input.
-2. Check: has the user already provided CLI output or a generated Review Package?
-   - If YES: proceed as Offline Package Mode.
-   - If NO: tell the user what to collect (see `§2.1` checklist), wait for the evidence.
+2. **Proactively attempt auto-collection before asking the user for anything**:
+   - Check for credentials (`.env`, `~/.sap-transport-gate/config.json`, env vars).
+   - If credentials found: run `python3 scripts/tr_collector.py collect {TR_ID} --output-dir reports/{TR_ID}_package/ --verbose` using available shell tools.
+   - If collection succeeds: treat as Offline Package Mode with the collected package.
+   - If collection fails or credentials absent: fall back to Offline Local Mode. Inform the user of the reason and declare mode degradation in the report.
+   - If shell execution is unavailable: ask the user to run the command and provide the output. Do NOT proceed with partial review until the user responds.
 3. Never ask for SAP login credentials, passwords, or connection strings.
 4. Never fabricate object content based on a TR ID alone.
-5. If CLI is unavailable, degrade gracefully to Offline Local Mode with scope limitation declared.
+5. If auto-collection is not possible, degrade gracefully to Offline Local Mode with scope limitation declared.
 
 ---
 

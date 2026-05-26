@@ -7,7 +7,7 @@ description: |
 license: MIT
 allowed-tools: [Read, Write]
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   type: hybrid
   author: Shrek
   tags: ["sap", "transport", "release-gate", "abap", "review"]
@@ -111,29 +111,46 @@ Determine the review mode from the input. Full rules in `references/review-modes
 | User provides only source files or partial materials (no manifest, no full TR context)       | Offline Local Mode    |
 | User provides a Transport Request ID and CLI output or live system access via internal tools | Online Transport Mode |
 
-**Online Transport Mode**: When the user provides a TR ID and SAP credentials are available, guide them to run `scripts/tr_collector.py collect <TR_ID>` first. The script exports a structured Review Package (manifest.json + source files) which is then reviewed in the same workflow as Offline Package Mode. Full setup and usage in `references/sap-connectivity.md`.
+**Online Transport Mode — Proactive Collection Protocol:**
 
-**Online Transport Mode — Credential Verification:**
+When a TR ID is identified and no pre-assembled package exists, the SKILL must **proactively attempt collection** rather than waiting for the user to provide materials. Execute the following in order:
 
-Before running `tr_collector.py collect`, check credential availability and handle failures explicitly:
+1. **Check credential availability** — inspect `.env` in the skill directory, `~/.sap-transport-gate/config.json`, and process environment variables for `SAP_URL`, `SAP_USERNAME`, `SAP_PASSWORD`, `SAP_CLIENT`.
 
-1. **Credentials not configured** — no `.env`, no `~/.sap-transport-gate/config.json`, no process env vars:
+2. **Credentials found → run `tr_collector.py collect` automatically**:
 
-   > "No SAP credentials found. To use Online Transport Mode, set up credentials using one of these methods:
+   Using available shell execution tools (e.g., Bash), run:
+   ```bash
+   python3 scripts/tr_collector.py collect {TR_ID} --output-dir reports/{TR_ID}_package/ --verbose
+   ```
+
+   - **Collection succeeds** → proceed as Offline Package Mode with the collected package at `reports/{TR_ID}_package/`. Do NOT ask the user to run the script.
+   - **Collection fails** (HTTP 401, 403, connection refused, SSL error, timeout):
+     > "SAP connection failed: `{error}`. Proceeding with Offline Local Mode. See `references/sap-connectivity.md §11` for the step-by-step manual export guide if you want a complete evidence package."
+
+     Reclassify to Offline Local Mode and continue.
+
+3. **Credentials not configured** — no `.env`, no config file, no env vars:
+
+   > "No SAP credentials found. Proceeding with Offline Local Mode using materials already provided.
    >
-   > - **Option A (recommended)**: Copy `.env.example` to `.env` in the skill directory and fill in `SAP_URL`, `SAP_USERNAME`, `SAP_PASSWORD`, `SAP_CLIENT`.
-   > - **Option B**: Run `python3 scripts/tr_collector.py configure` for interactive setup.
-   >
-   > After setup, run `python3 scripts/tr_collector.py ping` to verify.
-   >
-   > Alternatively, switch to **Offline Local Mode**: export TR objects manually from SAP GUI and provide the source files."
+   > To enable automatic TR collection in future reviews, configure credentials via:
+   > - **Option A**: Copy `.env.example` to `.env` and fill in `SAP_URL`, `SAP_USERNAME`, `SAP_PASSWORD`, `SAP_CLIENT`.
+   > - **Option B**: Run `python3 scripts/tr_collector.py configure` for interactive setup, then `python3 scripts/tr_collector.py ping` to verify."
 
-2. **Credentials configured but connection fails** — `ping` or `collect` returns HTTP 401, 403, connection refused, or SSL error:
-   > "SAP connection failed: `{error}`.
-   >
-   > You can still perform a review using manually exported files. See `references/sap-connectivity.md §11` for the step-by-step export guide (SE01 → SE38/SE24/SE37 → local directory). Once files are ready, provide the directory path and I will review as **Offline Local Mode**."
+   Reclassify to Offline Local Mode and continue.
 
-When falling back to Offline Local Mode, proceed with Step 1 re-classification: declare mode as Offline Local Mode and continue.
+4. **Shell execution not available** — if the AI agent has no shell/bash capability:
+
+   > "Shell execution is not available in this environment. To use automatic collection, run:
+   > ```bash
+   > python3 scripts/tr_collector.py collect {TR_ID} --output-dir reports/{TR_ID}_package/ --verbose
+   > ```
+   > Once the package is ready, provide the path and I will proceed as Offline Package Mode. Or confirm you cannot run it to proceed now with Offline Local Mode."
+
+   Wait for user response before continuing. Do NOT fabricate materials.
+
+When falling back to Offline Local Mode at any point, reclassify mode, declare the fallback reason in the report, and continue.
 
 **Offline Package Mode** is the preferred and most complete mode. Always declare the mode at the top of the report.
 
@@ -339,15 +356,22 @@ Report rules:
 - Never write "looks fine" or "seems OK" without citing evidence
 - Report language: English
 
-File naming: `TR_REVIEW_{TR_ID}_{YYYYMMDD}.md`
-When `NO_GO`: prefix `NOGO_TR_REVIEW_{TR_ID}_{YYYYMMDD}.md`
+File naming: `TR_REVIEW_{TR_ID}_{YYYYMMDD}.md`  
+When `NO_GO`: prefix `NOGO_TR_REVIEW_{TR_ID}_{YYYYMMDD}.md`  
+When `NEED_MORE_EVIDENCE`: prefix `NME_TR_REVIEW_{TR_ID}_{YYYYMMDD}.md`  
+Full naming table in `references/report-format.md §3`.
 
-Save location — context-aware rule (apply in order):
+Save location — **always use a TR-specific subdirectory**:
 
-1. **Review Package directory present** — if `manifest.json` was produced by `tr_collector.py` (i.e., a `reports/{TR_ID}_package/` directory exists), save both the Markdown report and JSON summary **inside that package directory**. This co-locates all TR artifacts (manifest, sources, reports) under one directory and makes the package self-contained.
-2. **No package directory** — save to `reports/` under the current working directory (workspace root).
+Always save reports to `reports/{TR_ID}_package/` regardless of review mode. Never save directly to `reports/`.
 
-Create the target directory if it does not exist. Never ask the user to create it manually.
+| Mode | Directory creation |
+| ---- | ------------------ |
+| **Online Transport Mode** | `tr_collector.py collect --output-dir reports/{TR_ID}_package/` creates the directory automatically. Reports are saved inside it alongside `manifest.json` and `sources/`. |
+| **Offline Package Mode** | If the user provided a package at a different path, save reports to that path. If no path was specified, create `reports/{TR_ID}_package/` and save there. |
+| **Offline Local Mode** | Create `reports/{TR_ID}_package/` even if no manifest exists. Save all reports and any user-provided evidence files there. |
+
+Create the target directory automatically. Never ask the user to create it manually.
 
 ### JSON Summary (secondary)
 

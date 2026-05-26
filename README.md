@@ -31,7 +31,7 @@ An AI agent skill that performs structured, evidence-driven release readiness as
 | Principle | Rule |
 |---|---|
 | **Evidence-first** | AI never invents conclusions from insufficient evidence. Every finding must trace to real code, metadata, or material. Every gap must be declared. |
-| **No SAP login** | AI does not request credentials, does not connect to SAP, does not execute transports. Consumes provided evidence only. |
+| **No AI-side SAP login** | AI does not hold or request credentials. CLI performs read-only ADT calls only; AI consumes the collected evidence and never connects to SAP directly. |
 | **Single file ≠ TR review** | One ABAP file cannot constitute a Transport Request-level release gate. Scope is always declared. |
 | **LOW evidence → no GO** | If Evidence Level is `LOW`, decision is `NEED_MORE_EVIDENCE` or `NO_GO`. Never `GO`. |
 | **No fabricated test results** | Unread objects are not assumed safe. Missing test evidence must be declared. |
@@ -79,7 +79,7 @@ LOW / INFO only + EL HIGH            → GO
 | **Offline Local Mode** | User provides partial materials (source files only, no manifest) |
 | **Online Transport Mode** | TR ID provided + CLI output or internal tool access available |
 
-In all modes: AI does not log in to SAP. Credentials are never requested or accepted.
+In all modes: No AI-side SAP login; AI never holds or requests credentials. In Online Transport Mode, the CLI performs read-only ADT calls only.
 
 ---
 

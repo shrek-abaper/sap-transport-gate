@@ -1,6 +1,6 @@
 # Human-in-the-Loop Rules
 
-> `sap-transport-gate` v1.0.0 — §1: When to require human confirmation; §2: Confirmation spec format; §3: Role matrix
+> `sap-transport-gate` v1.2.0 — §1: When to require human confirmation; §2: Confirmation spec format; §3: Role matrix
 
 ---
 
@@ -27,11 +27,17 @@ The following situations always require human confirmation. AI cannot substitute
 
 ### §1.3 Evidence-Based Triggers
 
+> **SKILL BOUNDARY**: The SKILL automatically fetches the following when TR ID and credentials are available — these are NOT human confirmation triggers:
+> - **Object list**: fetched via `tr_collector.py collect` (ADT `/objects` endpoint or E071 fallback)
+> - **Source code**: fetched for all supported object types via `tr_collector.py`
+>
+> Only evidence that the SKILL **cannot obtain programmatically** requires human confirmation.
+
 | Trigger | Confirming Role(s) | Why |
 |---|---|---|
 | Functional Alignment is `Inferred / Limited` (no spec provided) | Business Owner or Product Owner | Without a functional spec, only the business owner can confirm that the implementation does what was intended. |
 | Test evidence absent but release requested | QA Lead or Technical Lead | Someone qualified must attest that adequate testing was performed, even if results were not provided in the package. |
-| Syntax check or activation status absent | Technical Lead | Someone must confirm current system state since AI cannot verify from missing evidence. |
+| Syntax check result absent (Offline modes only) | Technical Lead | In Offline modes the SKILL cannot run syntax checks; someone must confirm the current system state. In Online Transport Mode the SKILL should attempt to fetch activation status from ADT before triggering this. |
 | Dependency information absent | Technical Lead | Someone must confirm that required TR prerequisites are in place in the target system. |
 
 ### §1.4 Conflict-Based Triggers
@@ -137,3 +143,18 @@ Human confirmation in this SKILL is NOT:
 - An escape hatch from a `NO_GO` decision (confirmation cannot override `NO_GO` — the blocking finding must be remediated first)
 
 `CRITICAL` findings must be **remediated** before the decision can be elevated. Human confirmation can be used for `MEDIUM` findings and some `HIGH` findings with clear mitigation paths, but not as a way to "confirm away" a `CRITICAL` risk.
+
+---
+
+## §6 Required Actions (§6 of report) vs. Human Confirmation (§7 of report)
+
+These are two distinct sections in the report with different purposes. Do NOT conflate them.
+
+| | Required Actions (§6) | Human Confirmation Checklist (§7) |
+|---|---|---|
+| **What it contains** | Specific tasks that must be completed before release | Facts or risk assessments that need sign-off from a named role |
+| **Who acts** | Named role performs an action (writes code, runs a test, deploys a prereq TR) | Named role reviews the AI finding and signs off on acceptance or mitigation |
+| **Example** | "Developer: fix the hardcoded company code in method POST_DOC" | "Security Owner: confirm that AUTHORITY-CHECK on F_BKPF_BUK is sufficient given variable input" |
+| **Decision gate** | CONDITIONAL_GO / NO_GO / NEED_MORE_EVIDENCE | Any finding with `requires_human_confirmation: true` |
+
+**Critical rule**: Items the SKILL can fetch automatically (object list, source code) must appear in **neither** section. They are SKILL responsibilities, not human tasks. If a `tr_collector.py` run fails, the fallback is Offline Local Mode — not a Required Action asking the human to provide what the SKILL should have fetched.

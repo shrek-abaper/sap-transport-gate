@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.0] — 2026-05-26
+
+### Fixed
+
+- **Online Transport Mode — proactive auto-collection**: The SKILL now proactively runs `scripts/tr_collector.py collect {TR_ID} --output-dir reports/{TR_ID}_package/` using available shell tools when a TR ID is identified and no pre-assembled package exists. Previously, the SKILL waited passively for the user to run the script. Fallback to Offline Local Mode is triggered only when credentials are absent, the connection fails, or shell execution is unavailable.
+
+- **TR subdirectory always created**: Reports are now saved to `reports/{TR_ID}_package/` in all review modes (Online Transport, Offline Package, Offline Local). Previously, Offline Local Mode saved directly to `reports/`, breaking the TR-scoped artifact grouping. The subdirectory is created automatically; users are never asked to create it manually.
+
+- **Required Actions (§6) scope restricted to human-only items**: The `§6 Required Actions Before Release` section of the report now explicitly excludes SKILL-executable tasks. Object list retrieval and source code fetching via `tr_collector.py` must not appear as Required Actions. Only tasks requiring human intervention (code fixes, manual test execution, UAT sign-off, business approval, prerequisite TR deployment) are listed. A SKILL BOUNDARY note was added to `references/report-format.md §1 Section 6` and `references/human-loop.md §6` to enforce this rule.
+
+- **`human-loop.md §1.3` — object list removed as human trigger**: Object list retrieval is a SKILL responsibility (auto-fetched via `tr_collector.py`), not a human confirmation trigger. Removed from the Evidence-Based Triggers table. Syntax check remains a human trigger for Offline modes with a clarification that Online Transport Mode should attempt ADT fetch first.
+
+- **Required Actions vs. Human Confirmation boundary documented**: Added `references/human-loop.md §6` — a new section that clearly defines the difference between `§6 Required Actions` (human performs an action) and `§7 Human Confirmation Checklist` (human signs off on a finding), preventing AI from conflating the two.
+
+### Changed
+
+- `references/report-format.md §3 Save Location`: Replaced conditional two-rule layout with a single always-create-subdir rule keyed on review mode.
+- `references/review-modes.md §1.3 Online Transport Mode flow`: Step 2 changed from "tell user what to collect, wait for evidence" to "proactively run `tr_collector.py collect`; degrade to Offline Local Mode on failure."
+- All patched `references/*.md` headers bumped from `v1.0.0` to `v1.2.0`.
+
+---
+
 ## [1.1.0] — 2026-05-26
 
 ### Added
