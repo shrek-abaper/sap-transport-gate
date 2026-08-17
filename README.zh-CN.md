@@ -2,6 +2,9 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
+> [!IMPORTANT]
+> **本仓库已归档，不再更新。** `sap-transport-gate` 现仅在 [sap-engineering-skill](https://github.com/shrek-abaper/sap-engineering-skill) Monorepo 中维护（[`skills/sap-transport-gate`](https://github.com/shrek-abaper/sap-engineering-skill/tree/main/skills/sap-transport-gate)）。最新版本、Issue 与改进请前往该仓库。
+
 > SAP 传输请求发布前门禁审查 AI 技能
 
 一个基于证据驱动的 AI 智能体技能，用于对 SAP 传输请求（Transport Request）进行结构化发布准备评估，生成正式的 `GO / CONDITIONAL_GO / NO_GO / NEED_MORE_EVIDENCE` 决策和发布准备报告。
